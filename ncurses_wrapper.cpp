@@ -50,7 +50,7 @@ namespace ncurses {
 	}
 
 	window::window(WINDOW *window, int h, int w, int y, int x, bool box) : 
-		height(h), width(w), start_y(y), start_x(x), win(window), box(box)
+		win(window), box(box), height(h), width(w), start_y(y), start_x(x)
 	{
 		if (win == nullptr) 
 			throw std::runtime_error("Error createing window");

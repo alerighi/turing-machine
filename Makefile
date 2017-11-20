@@ -1,5 +1,5 @@
 CXX=g++
-CXXFLAGS=-O2 -std=c++14 -g
+CXXFLAGS=-O2 -std=c++14 -g -Wall -Wextra
 LDFLAGS=-lncurses
 EXE=TM
 OBJECTS=tokenizer.o turing_machine.o command_line.o ncurses_gui.o ncurses_wrapper.o 

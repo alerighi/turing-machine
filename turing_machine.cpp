@@ -11,7 +11,7 @@ const char * turing_machine::init_state_name = "$";
 
 // constructors
 turing_machine::turing_machine(unsigned long memory_size, char initial_symbol) 
-	: tape_length(memory_size), initial_symbol(initial_symbol), head_pos(initial_symbol/2) {
+	: tape_length(memory_size), head_pos(initial_symbol/2), initial_symbol(initial_symbol) {
 	reset();
 }
 
@@ -88,6 +88,13 @@ void turing_machine::set_tape(unsigned long pos, char c) {
 	tape[pos] = c; 
 }
 
+void turing_machine::set_state(const std::string &state) {
+	if (state_code.count(state)) 
+		current_state = state_code[state];
+	else 
+		throw std::runtime_error("Non existent state!");
+}
+
 
 void turing_machine::set_initial_symbol(char init) {
 	initial_symbol = init;
@@ -99,7 +106,7 @@ void turing_machine::reset() {
 	if (tape == nullptr)
 		set_memory_size(tape_length);
 
-	for (int i = 0; i < tape_length; i++) {
+	for (long i = 0; i < tape_length; i++) {
 		tape[i] = initial_symbol;
 	}
 
@@ -174,10 +181,10 @@ void turing_machine::move_head(int diff) {
 const char * turing_machine::get_tape_raw() const {
 	return tape;
 }
-const unsigned long turing_machine::get_tape_lenght() const {
+unsigned long turing_machine::get_tape_lenght() const {
 	return tape_length;
 }
-const long turing_machine::get_head_pos() const {
+long turing_machine::get_head_pos() const {
 	return head_pos;
 }
 
@@ -270,7 +277,7 @@ const std::string turing_machine::get_program() const {
 const std::vector<const std::string> turing_machine::get_program_lines() const {
 	std::vector<const std::string> result;
 
-	for (int i = 0; i < program.size(); i++) {
+	for (size_t i = 0; i < program.size(); i++) {
 		result.push_back(format_instruction(program[i], i+1));
 	}
 

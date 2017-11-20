@@ -16,6 +16,7 @@ In command mode, you can enter the following commands (with the alias indicated 
 - `memorysize [nbytes]` : set the size of the tape to `nbytes`
 - `initialsymbol [symbol]` : set the initla symbol for the tape
 - `set_tape [start] [string]` : put `string` on the tape starting from `start`
+- `set_state [state]` : set the state to `state`
 - `move_head [pos]` : move the head to pos 
 - `add (+) [from] [read] [to] [write] [dir]` : add a new instruction. From `from` if you read `read` go to `to`, write `write` and move the head to `dir`. `dir` is `<` for left and `>` for right.
 - `del (-) [n]` : deletes the instruction number `n``
@@ -37,4 +38,4 @@ In GUI mode, you can:
 - enter command mode `:`
 - reset machine with `R``
 - `\` change tape symbol 
- 
+

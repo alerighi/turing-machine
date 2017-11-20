@@ -29,7 +29,7 @@ class tape_win : public ncurses::window {
 public:
 
 	tape_win(int height, int width, int starty, int startx, const turing_machine &tm) : 
-		window(height, width, starty, ((width-1) % 4) + 1), number_of_cells((width-1)/4 - 1), tm(tm) {
+		window(height, width, starty, startx + ((width-1) % 4) + 1), number_of_cells((width-1)/4 - 1), tm(tm) {
 			update_tape();
 		}
 
@@ -135,7 +135,7 @@ public:
 class code_win : public ncurses::window {
 
 	const turing_machine &tm;
-	int start = 0; 
+	unsigned int start = 0; 
 
 public:
 	code_win(int height, int width, int starty, int startx, const turing_machine &tm) :
@@ -148,7 +148,7 @@ public:
 			refresh();
 			return;
 		}
-		for (int i = 0; i < height && start + i < tm.get_program_lines().size(); i++) {
+		for (size_t i = 0; i < static_cast<size_t>(height) && start + i < tm.get_program_lines().size(); i++) {
 			printw("%s", tm.get_program_lines()[start + i].c_str());
 			clrtoeol(); 
 		}

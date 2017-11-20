@@ -10,11 +10,6 @@
 #include <cstdio>
 
 #include <stdexcept>
-#include <iostream>
-#include <string>
-#include <vector>
-#include <array>
-#include <map>
 
 #include "command_line.hpp"
 #include "turing_machine.hpp"
@@ -30,7 +25,7 @@
 
 bool stop = false;
 
-static void sigint_handler(int s) {
+static void sigint_handler(int /* unused */) {
 	signal(SIGINT, sigint_handler);
 	stop = true;
 }
@@ -43,6 +38,7 @@ const static char * USAGE =
 	"    - `memorysize [nbytes]` : set the size of the tape to `nbytes`\n"
 	"    - `initialsymbol [symbol]` : set the initla symbol for the tape\n"
 	"    - `set_tape [start] [string]` : put `string` on the tape starting from `start`\n"
+	"    - `set_state [state]` : set the state to `state`\n"
 	"    - `move_head [pos]` : move the head to pos\n"
 	"    - `add (+) [from] [read] [to] [write] [dir]` : add a new instruction. From `from` if you read `read` go to `to`, write `write` and move the head to `dir`. `dir` is `<` for left and `>` for right.\n"
 	"    - `del (-) [n]` : deletes the instruction number `n``\n"
@@ -147,6 +143,9 @@ void parse_line(char *line, turing_machine &m, FILE *out) {
 	case hash("set_tape"): 
 		ul = t.get_ulong();
 		m.set_tape(ul, t.next());
+		break;
+	case hash("set_state"):
+		m.set_state(t.get_string());
 		break;
 	case hash("print_state"):
 	case hash("ps"):
