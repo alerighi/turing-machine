@@ -5,11 +5,16 @@
 #include "turing_machine.hpp"
 
 class tokenizer {
+	char *str;
 	char *line;
 	char *end;
 
+	void init();
+	
 public:
 	tokenizer(char *line);
+	tokenizer(const std::string& s);
+	~tokenizer();
 	char * next();
 	char * to_end() const;
 	char get_char();

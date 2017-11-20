@@ -44,15 +44,15 @@ class turing_machine {
 	};
 
 	// state codifications functions
-	int get_state_code(const std::string &name);
+	int get_state_code(const std::string& name);
 	std::string get_state_name(int code) const;
-	const std::string format_instruction(const instruction &i, int line) const;
+	const std::string format_instruction(const instruction& i, int line) const;
 
 public:
 	turing_machine(long memory_size = 1000, char initial_symbol = '0');
 
 	// program manipulation instructions
-	void add_instruction(const std::string &from, char read, const std::string &to, char write, direction dir);
+	void add_instruction(const std::string& from, char read, const std::string& to, char write, direction dir);
 	void del_instruction(int index);
 	void clear_program();
 	
@@ -60,9 +60,9 @@ public:
 	void set_memory_size(long memory_size);
 	void set_initial_symbol(char init);
 	void set_head_position(long pos) ;
-	void set_tape(long pos, char *str);
+	void set_tape(long pos, const std::string& str);
 	void set_tape(long pos, char c);
-	void set_state(const std::string &state);
+	void set_state(const std::string& state);
 
 	// machine control 
 	void reset();
@@ -70,17 +70,17 @@ public:
 	void move_head(int diff);
 
 	// state getters
-	const char * get_tape_raw() const;
+	const std::string& get_tape_raw() const;
 	long get_tape_length() const;
 	long get_head_pos() const;
-	const char * get_current_state() const; 
+	const std::string& get_current_state() const; 
 	int get_computation_steps() const;
 	const std::vector<std::string> get_program_lines() const;
 	const std::string get_tape(int n = -1) const;
 	const std::string get_state(int n = -1) const;
 	const std::string get_program() const;
 
-	friend void save_file(const char *filename, const turing_machine &tm);
+	friend void save_file(const std::string& filename, const turing_machine& tm);
 };
 
 #endif

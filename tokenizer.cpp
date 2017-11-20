@@ -1,6 +1,19 @@
 #include "tokenizer.hpp"
 
 tokenizer::tokenizer(char *line) : line(line) {
+	init();
+}
+
+tokenizer::tokenizer(const std::string &s) : str(strdup(s.c_str())), line(str) {
+	init();
+}
+
+tokenizer::~tokenizer() {
+	if (str != nullptr)
+		free(str);
+}
+
+void tokenizer::init() {
 	char *s = line;
 	// Sets the end pointer. The string ends with a newline or a comment character 
 	for (; *s; s++) {

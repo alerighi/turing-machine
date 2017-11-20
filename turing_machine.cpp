@@ -67,11 +67,8 @@ void turing_machine::set_head_position(long pos) {
 	head_pos = pos;
 }
 
-void turing_machine::set_tape(long pos, char *str) {
-	while (*str) {
-		tape.at(pos++) = *str++;
-	}
-	head_pos = pos - 1;
+void turing_machine::set_tape(long pos, const std::string &str) {
+	tape.replace(pos, pos + str.size(), str);
 }
 
 void turing_machine::set_tape(long pos, char c) {
@@ -162,8 +159,8 @@ void turing_machine::move_head(int diff) {
 }
 
 // state getters
-const char * turing_machine::get_tape_raw() const {
-	return tape.c_str();
+const std::string& turing_machine::get_tape_raw() const {
+	return tape;
 }
 long turing_machine::get_tape_length() const {
 	return tape.size();
@@ -172,8 +169,8 @@ long turing_machine::get_head_pos() const {
 	return head_pos;
 }
 
-const char * turing_machine::get_current_state() const {
-	return state_name[current_state].c_str();
+const std::string& turing_machine::get_current_state() const {
+	return state_name[current_state];
 }
 
 int turing_machine::get_computation_steps() const {

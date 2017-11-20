@@ -16,7 +16,7 @@
 
 extern bool stop;
 
-void parse_line(char *line, turing_machine &tm, FILE *out);
-void load_file(const char *filename, turing_machine &m, FILE *out);
+void parse_line(const std::string& line, turing_machine &tm, std::ostream&);
+void load_file(const std::string& filename, turing_machine &m, std::ostream&);
 
 #endif

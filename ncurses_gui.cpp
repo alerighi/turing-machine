@@ -1,19 +1,14 @@
-#include <cstring>
-#include <cstdarg>
+#include <stdexcept> 
+#include <iostream>
+#include <sstream>
+#include <string>
 
 #include "ncurses_gui.hpp"
 #include "turing_machine.hpp"
 #include "ncurses_wrapper.hpp"
-
-#include <stdexcept> 
-#include <iostream>
-#include <cassert>
+#include "command_line.hpp"
 
 const char * TITLE = "Turing Machine simulator";
-
-void parse_line(char *line, turing_machine &m, FILE *out);
-extern bool stop;
-
 
 class tape_window : public ncurses::window {
 
@@ -110,7 +105,7 @@ public:
 	}
 
 	void update_tape() {
-		tape = tm.get_tape_raw();
+		tape = tm.get_tape_raw().c_str();
 		head_pos = tm.get_head_pos();
 		tape_length = tm.get_tape_length();
 
@@ -180,7 +175,7 @@ public:
 
 	void update_status() {
 		move(0, 0);
-		printw("Current state: %s\n", tm.get_current_state());
+		printw("Current state: %s\n", tm.get_current_state().c_str());
 		printw("Head position: %d/%d\n", tm.get_head_pos(), tm.get_tape_length());
 		printw("Computation steps: %d\n", tm.get_computation_steps());
 	}
@@ -229,18 +224,6 @@ public:
 		ncurses::endwin();
 	}
 
-	char * parse_line(char *line, turing_machine &m) {
-		static char outbuff[4096];
-		static FILE *outfd = fmemopen(outbuff, sizeof(outbuff), "w");
-
-		memset(outbuff, 0, sizeof(outbuff));
-		rewind(outfd);
-
-		::parse_line(line, m, outfd);
-
-		return outbuff;
-	}
-
 	void update() {
 		tape_win.update_tape();
 		code_win.update_code();
@@ -249,6 +232,7 @@ public:
 
 	void prompt_command() {
 		char line[1024];
+		std::stringstream out;
 
 		ncurses::set_echo(true);
 		ncurses::set_cursor_visible(true);
@@ -258,7 +242,8 @@ public:
 		status_win.clrtoeol();
 		if (status_win.getstr(line) != -1) {
 			try {
-				cmd_win.printw("%s", parse_line(line, m));			
+				::parse_line(line, m, out);
+				cmd_win.printw("%s", out.str().c_str());			
 				update(); 
 			} catch (const std::exception &e) {
 				cmd_win.printw("Error: %s\n", e.what());
