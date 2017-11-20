@@ -2,6 +2,7 @@
 
 tokenizer::tokenizer(char *line) : line(line) {
 	char *s = line;
+	// Sets the end pointer. The string ends with a newline or a comment character 
 	for (; *s; s++) {
 		if (*s == '\n' || *s == '\r' || *s == ';' || *s == '#') {
 			*s = '\0';
@@ -13,29 +14,20 @@ tokenizer::tokenizer(char *line) : line(line) {
 
 char * tokenizer::next() {
 	char *start; 
-
 	if (line >= end)
 		return nullptr;
-
 	while (line < end && *line == ' ') 
 		line++;
-	
 	if (line == end)
 		return nullptr;
-
 	start = line;
-
 	while (line < end && *line != ' ')
 		line++;
-
 	if (line == nullptr)
 		return nullptr;
-	
 	*line++ = '\0';
-
 	if (start == line)
 		return nullptr;
-
 	return start;
 }
 
@@ -87,13 +79,10 @@ direction tokenizer::get_direction() {
 unsigned long tokenizer::get_ulong() {
 	char *str = next();
 	char *endp;
-	long result;
-
 	if (str != nullptr) {
-		result = strtol(str, &endp, 10);
+		long result = strtol(str, &endp, 10);
 		if (*endp == '\0')
 			return result;
 	}
-
 	throw std::runtime_error("Invalid numeric constant");
 }
