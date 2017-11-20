@@ -16,43 +16,44 @@
 #include <array>
 #include <map>
 
-#if defined(__unix__) || defined(__APPLE__)
-#include <unistd.h>
-#endif 
-
+#include "command_line.hpp"
 #include "turing_machine.hpp"
 #include "tokenizer.hpp"
 
-using std::cin;
-using std::cout;
-using std::cerr;
-using std::endl;
+#ifdef UNIX 
+#include <unistd.h>
+#endif 
 
+#ifdef HAS_GUI
+#include "ncurses_gui.hpp"
+#endif
 
 bool stop = false;
 
-void sigint_handler(int s) {
+static void sigint_handler(int s) {
 	signal(SIGINT, sigint_handler);
 	stop = true;
 }
 
-void usage() {
-	cout << "Available commands:" << endl;
-	cout << "    - quit (q) =>  close program" << endl;
-	cout << "    - help (?) => this help" << endl;
-	cout << "    - source (<) <filename> => loads <filename>" << endl;
-	cout << "    - step (s) [number of steps] => execute ont (N) steps" << endl;
-	cout << "    - run => run the machine to halt (break with CTRL-C one time)" << endl;
-	cout << "    - clear (C) => clears the program" << endl;
-	cout << "    - add (+) <src>, <read>, <dest>, <write>, <{<,>}> => add instruction" << endl;
-	cout << "    - del (-) <n> => delete instruction n" << endl;
-	cout << "    - reset (r) => reset the machine" << endl;
-	cout << "    - print (pp) => print the program" << endl;
-	cout << "    - state (ps) => print the machine state" << endl;
-	cout << "    - state_full (psf) => print the machine state, full tape" << endl;
-	cout << "    - memsize <size> => set the size of memory" << endl;
-	cout << "    - initsymbol <symbol> => set the initial symbol" << endl;
-}
+const static char * USAGE = 
+	"    - `load (<) [path]` : load program from file\n"
+	"    - `save (>) [path]` : save the current program to file\n"
+	"    - `run (r)` : execute the machine till it goes to a halt state\n"
+	"    - `step (s) [nsteps]` : execute `nsteps` computations steps. Default 1.\n"
+	"    - `memorysize [nbytes]` : set the size of the tape to `nbytes`\n"
+	"    - `initialsymbol [symbol]` : set the initla symbol for the tape\n"
+	"    - `set_tape [start] [string]` : put `string` on the tape starting from `start`\n"
+	"    - `move_head [pos]` : move the head to pos\n"
+	"    - `add (+) [from] [read] [to] [write] [dir]` : add a new instruction. From `from` if you read `read` go to `to`, write `write` and move the head to `dir`. `dir` is `<` for left and `>` for right.\n"
+	"    - `del (-) [n]` : deletes the instruction number `n``\n"
+	"    - `print_program (pp)` : print the program\n"
+	"    - `print_state (ps)` : print the machine state\n" 
+	"    - `print_state_full (psf)` : print the state showing the whole tape\n"
+	"    - `clear (C)` : clears the program\n"
+	"    - `reset (R)` : reset the machine\n"
+	"    - `echo [string]` : prints `string`\n"
+	"    - `quit (q)` : quit\n"
+	"    - `help (?)` : show help message\n";
 	
 constexpr static unsigned int hash(const char *s, int i = 0) {
 	if (s == nullptr)
@@ -60,25 +61,44 @@ constexpr static unsigned int hash(const char *s, int i = 0) {
 	return !s[i] ? 5381 : (hash(s, i+1) * 33) ^ s[i];
 }
 
-void parse_line(char*, turing_machine&);
+void save_file(const char *filename, const turing_machine &tm) {
+	FILE *out = fopen(filename, "w");
+	if (out == nullptr)
+		throw std::runtime_error(std::string("Cannot open ") + filename + " for writing: " + strerror(errno));
+	fprintf(out, "; machine program output\n");
+	fprintf(out, "memsize %lu\n", tm.tape_length);
+	fprintf(out, "initsymbol %c\n", tm.initial_symbol);
+	fprintf(out, "; transition function\n");
+	for (const turing_machine::instruction &i : tm.program) {
+		fprintf(out, "+ %s %c %s %c %c\n",
+			tm.get_state_name(i.from_state).c_str(),
+			i.symbol_read, 
+			tm.get_state_name(i.to_state).c_str(),
+			i.symbol_write,
+			i.tape_direction == direction::L ? '<' : '>');
+	}
+	fprintf(out, "; end of file\n");
+	fclose(out);
+}
 
-void load_file(const std::string &filename, turing_machine &m) {
-	FILE *fp = fopen(filename.c_str(), "r");
-	if (!fp)
+void load_file(const char *filename, turing_machine &m, FILE *out) {
+	FILE *in = fopen(filename, "r");
+	if (in == nullptr)
 		throw std::runtime_error(std::string("Cannot open file ") + filename + ": " + strerror(errno));
 	char l[1024];
 	int i = 0;
-	while (fgets(l, sizeof(l), fp)) {
+	while (fgets(l, sizeof(l), in)) {
 		i++;
 		try {
-			parse_line(l, m);
+			parse_line(l, m, out);
 		} catch (const std::exception &e) {
-			cout << "Error at file " << filename << " line " << std::to_string(i) << ":" << e.what() << endl;
+			fprintf(out, "Error at file %s line %d : %s\n", filename, i, e.what());
 		}
 	}
+	fclose(in);
 }
 
-void parse_line(char *line, turing_machine &m) {
+void parse_line(char *line, turing_machine &m, FILE *out) {
 
 	tokenizer t(line);
 	unsigned long steps, ul;
@@ -87,18 +107,21 @@ void parse_line(char *line, turing_machine &m) {
 
 	switch (hash(t.next())) {
 	case hash("echo"):
-		cout << t.to_end() << endl;
+		fprintf(out, "%s\n", t.to_end());
 		break;
 	case hash("quit"): 
 	case hash("q"):
-	case hash("%%"):
 		exit(EXIT_SUCCESS);
 	case hash("help"):
-		usage();
+		fputs(USAGE, out);
 		break;
 	case hash("read"):
 	case hash("<"):
-		load_file(t.get_string(), m);
+		load_file(t.get_string().c_str(), m, out);
+		break;
+	case hash("save"):
+	case hash(">"):
+		save_file(t.get_string().c_str(), m);
 		break;
 	case hash("step"):
 	case hash("s"):
@@ -110,36 +133,37 @@ void parse_line(char *line, turing_machine &m) {
 		while (steps-- && m.step());
 		break;
 	case hash("memsize"):
+	case hash("memorysize"):
 		m.set_memory_size(t.get_ulong());
 		break;
 	case hash("initsymbol"):
+	case hash("initialsymbol"):
 		m.set_initial_symbol(t.get_symbol());
 		break;
 	case hash("head_position"):
-	case hash("hp"):
-	case hash("@@"):
-		m.position_head(t.get_ulong());
+	case hash("move_head"):
+		m.set_head_position(t.get_ulong());
 		break;
 	case hash("set_tape"): 
-	case hash("W"):
 		ul = t.get_ulong();
 		m.set_tape(ul, t.next());
 		break;
-	case hash("state"):
+	case hash("print_state"):
 	case hash("ps"):
-		cout << m.to_string(50) << endl;
+		fprintf(out, "%s\n", m.get_state(50).c_str());
 		break;
-	case hash("state_full"):
+	case hash("print_state_full"):
 	case hash("psf"):
-		cout << m.to_string() << endl;
+		fprintf(out, "%s\n", m.get_state().c_str());
 		break;
-	case hash("print"):
+	case hash("print_program"):
 	case hash("pp"):
-		cout << m.print_program() << endl;
+		fprintf(out, "%s\n", m.get_program().c_str());
 		break;
 	case hash("reset"):
+	case hash("R"):
 		m.reset();
-		cout << "Machine reset" << endl;
+		fputs("Machine reset\n", out);
 		break;
 	case hash("add"):
 	case hash("+"):
@@ -154,15 +178,22 @@ void parse_line(char *line, turing_machine &m) {
 		m.del_instruction(t.get_ulong());
 		break;
 	case hash("clear"):
+	case hash("C"):
 		m.clear_program();
-		cout << "Program cleared" << endl;
+		fputs("Program cleared\n", out);
 		break;
 	case hash("run"):
+	case hash("r"):
 		stop = false;
 		while (m.step() && !stop);
 		if (!stop)
-			cout << "Machine reached halt state" << endl;
+			fputs("Machine reached halt state\n", out);
 		break;
+#ifdef HAS_GUI
+	case hash("gui"):	
+		start_gui();
+		break;
+#endif
 	case 0: // null command
 		return;
 	default:
@@ -181,7 +212,14 @@ int main(int argc, char *argv[])
 
 	turing_machine m;
 
-#if defined(__unix__) || defined(__APPLE__)
+#ifdef HAS_GUI
+	if (argc >= 2 && !strcmp(argv[1], "-gui")) {
+		start_gui();
+		return 0;
+	}
+#endif
+
+#ifdef UNIX
 	piped = !isatty(fileno(stdin));
 #endif
 
@@ -189,9 +227,9 @@ int main(int argc, char *argv[])
 		printf(PROMPT);
 	while (fgets(line, sizeof(line), stdin)) {
 		try {
-			parse_line(line, m);
+			parse_line(line, m, stdout);
 		} catch (const std::exception &e) {
-			cerr << "Error: " << e.what() << endl;
+			fprintf(stdout, "Error: %s\n", e.what());
 		}
 		if (!piped)
 			printf(PROMPT);

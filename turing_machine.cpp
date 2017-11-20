@@ -2,25 +2,16 @@
 
 #include <cstdlib>
 #include <stdexcept>
+#include <algorithm>
+ 
+const int turing_machine::HALT_STATE = 0;
+const int turing_machine::INIT_STATE = 1; 
+const char * turing_machine::halt_state_name = "!";
+const char * turing_machine::init_state_name = "$";
 
-int turing_machine::get_state_code(const std::string &name) {
-	if (name_to_state_code.count(name))
-		return name_to_state_code[name];
-	int code = name_to_state_code[name] = state_code_to_name.size();
-	state_code_to_name.push_back(name);
-	return code;
-}
-
-std::string turing_machine::get_state_name(int code) const {
-	return state_code_to_name[code];
-}
-
-int turing_machine::get_number_of_states() const {
-	return state_code_to_name.size();
-}
-
-turing_machine::turing_machine(unsigned long memory_size, char initial_symbol) : tape_length(memory_size), initial_symbol(initial_symbol) {
-	set_memory_size(tape_length);
+// constructors
+turing_machine::turing_machine(unsigned long memory_size, char initial_symbol) 
+	: tape_length(memory_size), initial_symbol(initial_symbol), head_pos(initial_symbol/2) {
 	reset();
 }
 
@@ -28,49 +19,46 @@ turing_machine::~turing_machine() {
 	delete[] tape;
 }
 
+// state condifications functions
+int turing_machine::get_state_code(const std::string &name) {
+	if (state_code.count(name))
+		return state_code[name];
+	int code = state_code[name] = state_code.size();
+	state_name.push_back(name);
+	return code;
+}
+
+std::string turing_machine::get_state_name(int code) const {
+	return state_name[code];
+}
+
+// program manipulation
 void turing_machine::add_instruction(const std::string &from, char read, const std::string &to, char write, direction dir) {
 	int code_from = get_state_code(from);
 	int code_to = get_state_code(to);
 	
-	instruction i = {code_from, read, code_to, write, dir};
-	instructions.push_back(i);
+	instruction i = { true, code_from, read, code_to, write, dir };
+	program.push_back(i);
 
-
-	if (get_number_of_states() > transitions.size()) {
-		transitions.resize(get_number_of_states());
+	if (state_name.size() > program.size()) {
+		table.resize(state_name.size());
 	}
 
-	transition &t = transitions.at(code_from)[i.symbol_read];
-	t.is_valid = true;
-	t.to_state = code_to;
-	t.write_char = i.symbol_write;
-	t.dir = i.tape_direction;
+	table[code_from][i.symbol_read] = i;
 }
 
 void turing_machine::del_instruction(int index) {
-	const instruction &i = instructions.at(index);
-	transitions[i.from_state][i.symbol_read].is_valid = false;
-	instructions.erase(instructions.begin() + index - 1);
+	const instruction &i = program[index];
+	table[i.from_state][i.symbol_read].is_valid = false;
+	program.erase(program.begin() + index - 1);
 }
 
 void turing_machine::clear_program() {
-	instructions.clear();
-	transitions.clear();
+	program.clear();
+	std::fill(table.begin(), table.end(), std::array<instruction, 128>());
 }
 
-void turing_machine::reset() {
-	if (tape == nullptr)
-		set_memory_size(tape_length);
-
-	for (int i = 0; i < tape_length; i++) {
-		tape[i] = initial_symbol;
-	}
-
-	computation_steps = 0; 
-	current_state = INIT_STATE;
-	is_halt = false;
-}
-
+// machine settings
 void turing_machine::set_memory_size(unsigned long memory_size) {
 	tape_length = memory_size;
 	if (tape) 
@@ -85,7 +73,7 @@ void turing_machine::set_memory_size(unsigned long memory_size) {
 	reset();
 }
 
-void turing_machine::position_head(unsigned long pos) {
+void turing_machine::set_head_position(unsigned long pos) {
 	head_pos = pos;
 }
 
@@ -96,15 +84,37 @@ void turing_machine::set_tape(unsigned long pos, char *str) {
 	head_pos = pos - 1;
 }
 
+void turing_machine::set_tape(unsigned long pos, char c) {
+	tape[pos] = c; 
+}
+
+
 void turing_machine::set_initial_symbol(char init) {
 	initial_symbol = init;
 	reset();
+}
+
+// machine control 
+void turing_machine::reset() {
+	if (tape == nullptr)
+		set_memory_size(tape_length);
+
+	for (int i = 0; i < tape_length; i++) {
+		tape[i] = initial_symbol;
+	}
+
+	computation_steps = 0; 
+	current_state = turing_machine::INIT_STATE;
+	is_halt = false;
 }
 
 bool turing_machine::step() {
 
 	if (is_halt) 
 		throw std::runtime_error("The machine is halted");
+
+	if (table.size() < 1) 
+		throw std::runtime_error("Program empty!");
 	
 	// increase number of steps
 	computation_steps++;
@@ -113,24 +123,24 @@ bool turing_machine::step() {
 	char c = tape[head_pos];
 
 	// get next transition
-	transition next = transitions[current_state][c];
+	instruction next = table[current_state][c];
 
 	// check if instruction is valid
 	if (!next.is_valid)
-		next = transitions[current_state]['-'];
+		next = table[current_state]['-'];
 	if (!next.is_valid) {
 		is_halt = true;
 		throw std::runtime_error("Illegal instruction");
 	}
 
 	// write new char to tape
-	if (next.write_char == '-')
+	if (next.symbol_write == '-')
 		tape[head_pos] = c;
 	else 
-		tape[head_pos] = next.write_char;
+		tape[head_pos] = next.symbol_write;
 	
 	// move tape head
-	switch (next.dir) {
+	switch (next.tape_direction) {
 		case direction::L: head_pos--; break;
 		case direction::R: head_pos++; break;
 	}
@@ -145,7 +155,7 @@ bool turing_machine::step() {
 	current_state = next.to_state;
 
 	// check if halted
-	if (current_state == HALT_STATE) {
+	if (current_state == turing_machine::HALT_STATE) {
 		is_halt = true;
 		return false;
 	}
@@ -153,22 +163,45 @@ bool turing_machine::step() {
 	return true;
 }
 
-std::string turing_machine::get_tape() const {
-	if (head_pos >= 0 && head_pos < tape_length) {
-		return std::string(tape, head_pos)
-			+ '<' + tape[head_pos] + '>'
-			+ std::string(tape+head_pos+1, tape_length-head_pos-1);
-	}
-	if (head_pos < 0) {
-		return std::string("<>") + std::string(tape, tape_length);
-	} else {
-		return std::string(tape, tape_length) + "<>";
-	}
+void turing_machine::move_head(int diff) {
+	if (head_pos + diff >= 0 && head_pos + diff < tape_length)	
+		head_pos += diff;
+	else 
+		throw std::runtime_error("Head out of bounds");
 }
 
-std::string turing_machine::get_tape(int n) const {
-	if (n == -1)
-		return get_tape();
+// state getters
+const char * turing_machine::get_tape_raw() const {
+	return tape;
+}
+const unsigned long turing_machine::get_tape_lenght() const {
+	return tape_length;
+}
+const long turing_machine::get_head_pos() const {
+	return head_pos;
+}
+
+const char * turing_machine::get_current_state() const {
+	return state_name[current_state].c_str();
+}
+
+int turing_machine::get_computation_steps() const {
+	return computation_steps;
+}
+
+const std::string turing_machine::get_tape(int n) const {
+	if (n == -1) {
+		if (head_pos >= 0 && head_pos < tape_length) {
+			return std::string(tape, head_pos)
+				+ '<' + tape[head_pos] + '>'
+				+ std::string(tape+head_pos+1, tape_length-head_pos-1);
+		}
+		if (head_pos < 0) {
+			return std::string("<>") + std::string(tape, tape_length);
+		} else {
+			return std::string(tape, tape_length) + "<>";
+		}
+	}
 
 	int min = head_pos - n;
 	int max = head_pos + n;
@@ -191,7 +224,7 @@ std::string turing_machine::get_tape(int n) const {
 	return result;
 }
 
-std::string turing_machine::to_string(int n) const {
+const std::string turing_machine::get_state(int n) const {
 	std::string res = "Current state: " + get_state_name(current_state) + "\n";
 	res += "Head position: " + std::to_string(head_pos) + "\n";
 	res += "Computation steps: " + std::to_string(computation_steps) + "\n";
@@ -199,25 +232,46 @@ std::string turing_machine::to_string(int n) const {
 	return res;
 }
 
-std::string turing_machine::print_program() const {
+const std::string turing_machine::format_instruction(const instruction &i, int line) const {
+	char num[10];
+	snprintf(num, sizeof(num), "%4d", line);
+	std::string result = std::string(num) + ": ";
+	if (i.from_state == INIT_STATE)
+		result += " ===> ";
+	else if (i.to_state == HALT_STATE) 
+		result += " HALT ";
+	else 
+		result += "      ";	
+	result += "(" + get_state_name(i.from_state) + ", ";
+	result += i.symbol_read;
+	result += ") -> ("; 
+	result += get_state_name(i.to_state) + ", "; 
+	result += i.symbol_write;
+	result += ", ";
+	result += (i.tape_direction == direction::L ? '<' : '>');
+	result += ")";
+	if (current_state == i.from_state && (tape[head_pos] == i.symbol_read || i.symbol_read == '-'))
+		result += " <- ";
+	result += "\n";
+	return result;
+}
+
+const std::string turing_machine::get_program() const {
 	std::string result = "";
 
 	int l = 0;
-	for (const instruction &i : instructions) {
-		char num[10];
-		snprintf(num, sizeof(num), "%4d", ++l);
-		result += std::string(num) + ": ";
-		if (i.from_state == INIT_STATE)
-			result += " ===> ";
-		else if (i.to_state == HALT_STATE) 
-			result += " HALT ";
-		else 
-			result += "      ";	
-		result += "(" + get_state_name(i.from_state) + ", ";
-		result += std::to_string(i.symbol_read) + ") -> ("; 
-		result += get_state_name(i.to_state) + ", "; 
-		result += std::to_string(i.symbol_write) + ", ";
-		result += std::to_string(i.tape_direction == direction::L ? '<' : '>') + ")\n";
+	for (const instruction &i : program) {
+		result += format_instruction(i, ++l);
+	}
+
+	return result;
+}
+
+const std::vector<const std::string> turing_machine::get_program_lines() const {
+	std::vector<const std::string> result;
+
+	for (int i = 0; i < program.size(); i++) {
+		result.push_back(format_instruction(program[i], i+1));
 	}
 
 	return result;
