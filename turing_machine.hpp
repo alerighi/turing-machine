@@ -25,8 +25,7 @@ class turing_machine {
 	};
 	
 	// machine variables
-	char *tape = nullptr;
-	long tape_length;
+	std::string tape;
 	long head_pos;
 	char initial_symbol;
 	int current_state;
@@ -50,8 +49,7 @@ class turing_machine {
 	const std::string format_instruction(const instruction &i, int line) const;
 
 public:
-	turing_machine(unsigned long memory_size = 1000, char initial_symbol = '0');
-	~turing_machine();
+	turing_machine(long memory_size = 1000, char initial_symbol = '0');
 
 	// program manipulation instructions
 	void add_instruction(const std::string &from, char read, const std::string &to, char write, direction dir);
@@ -59,11 +57,11 @@ public:
 	void clear_program();
 	
 	// machine settings
-	void set_memory_size(unsigned long memory_size);
+	void set_memory_size(long memory_size);
 	void set_initial_symbol(char init);
-	void set_head_position(unsigned long pos) ;
-	void set_tape(unsigned long pos, char *str);
-	void set_tape(unsigned long pos, char c);
+	void set_head_position(long pos) ;
+	void set_tape(long pos, char *str);
+	void set_tape(long pos, char c);
 	void set_state(const std::string &state);
 
 	// machine control 
@@ -73,7 +71,7 @@ public:
 
 	// state getters
 	const char * get_tape_raw() const;
-	unsigned long get_tape_lenght() const;
+	long get_tape_length() const;
 	long get_head_pos() const;
 	const char * get_current_state() const; 
 	int get_computation_steps() const;

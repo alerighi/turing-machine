@@ -62,7 +62,7 @@ void save_file(const char *filename, const turing_machine &tm) {
 	if (out == nullptr)
 		throw std::runtime_error(std::string("Cannot open ") + filename + " for writing: " + strerror(errno));
 	fprintf(out, "; machine program output\n");
-	fprintf(out, "memsize %lu\n", tm.tape_length);
+	fprintf(out, "memsize %lu\n", tm.get_tape_length());
 	fprintf(out, "initsymbol %c\n", tm.initial_symbol);
 	fprintf(out, "; transition function\n");
 	for (const turing_machine::instruction &i : tm.program) {

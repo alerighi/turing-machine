@@ -11,13 +11,9 @@ const char * turing_machine::halt_state_name = "!";
 const char * turing_machine::init_state_name = "$";
 
 // constructors
-turing_machine::turing_machine(unsigned long memory_size, char initial_symbol) 
-	: tape_length(memory_size), head_pos(initial_symbol/2), initial_symbol(initial_symbol) {
+turing_machine::turing_machine(long memory_size, char initial_symbol) 
+	: tape(memory_size, initial_symbol), head_pos(initial_symbol/2), initial_symbol(initial_symbol) {
 	reset();
-}
-
-turing_machine::~turing_machine() {
-	delete[] tape;
 }
 
 // state condifications functions
@@ -61,33 +57,25 @@ void turing_machine::clear_program() {
 }
 
 // machine settings
-void turing_machine::set_memory_size(unsigned long memory_size) {
-	tape_length = memory_size;
-	if (tape) 
-		delete[] tape;
-	try {
-		tape = new char[tape_length];
-	} catch(const std::exception &e) {
-		tape = nullptr;
-		throw std::runtime_error("Error allocating memory!");
-	}
-	head_pos = tape_length / 2;
+void turing_machine::set_memory_size(long memory_size) {
+	tape.resize(memory_size);
+	head_pos = memory_size / 2;
 	reset();
 }
 
-void turing_machine::set_head_position(unsigned long pos) {
+void turing_machine::set_head_position(long pos) {
 	head_pos = pos;
 }
 
-void turing_machine::set_tape(unsigned long pos, char *str) {
+void turing_machine::set_tape(long pos, char *str) {
 	while (*str) {
-		tape[pos++] = *str++;
+		tape.at(pos++) = *str++;
 	}
 	head_pos = pos - 1;
 }
 
-void turing_machine::set_tape(unsigned long pos, char c) {
-	tape[pos] = c; 
+void turing_machine::set_tape(long pos, char c) {
+	tape.at(pos) = c; 
 }
 
 void turing_machine::set_state(const std::string &state) {
@@ -105,13 +93,7 @@ void turing_machine::set_initial_symbol(char init) {
 
 // machine control 
 void turing_machine::reset() {
-	if (tape == nullptr)
-		set_memory_size(tape_length);
-
-	for (long i = 0; i < tape_length; i++) {
-		tape[i] = initial_symbol;
-	}
-
+	fill(tape.begin(), tape.end(), initial_symbol);
 	computation_steps = 0; 
 	current_state = turing_machine::INIT_STATE;
 	is_halt = false;
@@ -155,7 +137,7 @@ bool turing_machine::step() {
 	}
 
 	// check if out of bound
-	if (head_pos < 0 || head_pos >= tape_length) {
+	if (head_pos < 0 || head_pos >= get_tape_length()) {
 		is_halt = true;
 		throw std::runtime_error("Out of memory");
 	}
@@ -173,7 +155,7 @@ bool turing_machine::step() {
 }
 
 void turing_machine::move_head(int diff) {
-	if (head_pos + diff >= 0 && head_pos + diff < tape_length)	
+	if (head_pos + diff >= 0 && head_pos + diff < get_tape_length())	
 		head_pos += diff;
 	else 
 		throw std::runtime_error("Head out of bounds");
@@ -181,10 +163,10 @@ void turing_machine::move_head(int diff) {
 
 // state getters
 const char * turing_machine::get_tape_raw() const {
-	return tape;
+	return tape.c_str();
 }
-unsigned long turing_machine::get_tape_lenght() const {
-	return tape_length;
+long turing_machine::get_tape_length() const {
+	return tape.size();
 }
 long turing_machine::get_head_pos() const {
 	return head_pos;
@@ -200,15 +182,15 @@ int turing_machine::get_computation_steps() const {
 
 const std::string turing_machine::get_tape(int n) const {
 	if (n == -1) {
-		if (head_pos >= 0 && head_pos < tape_length) {
-			return std::string(tape, head_pos)
+		if (head_pos >= 0 && head_pos < get_tape_length()) {
+			return tape.substr(0, head_pos)
 				+ '<' + tape[head_pos] + '>'
-				+ std::string(tape+head_pos+1, tape_length-head_pos-1);
+				+ tape.substr(head_pos+1, tape.size()-head_pos-1);
 		}
 		if (head_pos < 0) {
-			return std::string("<>") + std::string(tape, tape_length);
+			return std::string("<>") + tape;
 		} else {
-			return std::string(tape, tape_length) + "<>";
+			return tape + "<>";
 		}
 	}
 
@@ -218,17 +200,17 @@ const std::string turing_machine::get_tape(int n) const {
 
 	if (min < 0)
 		min = 0; 
-	if (max > tape_length)
-		max = tape_length;
+	if (max > get_tape_length())
+		max = get_tape_length();
 
 	if (head_pos > 0)
-		result += std::to_string(min) + "x[...]" + std::string(tape+min, head_pos-min);
+		result += std::to_string(min) + "x[...]" + tape.substr(min, head_pos-min);
 	result += "<";
-	if (head_pos >= 0 && head_pos < tape_length)
+	if (head_pos >= 0 && head_pos < get_tape_length())
 		result += tape[head_pos];
 	result += ">";
-	if (head_pos < (static_cast<int>(tape_length) - 1))
-		result += std::string(tape+head_pos+1, max-head_pos) + "[...]x" + std::to_string(tape_length-max);
+	if (head_pos < get_tape_length() - 1)
+		result += tape.substr(head_pos+1, max-head_pos) + "[...]x" + std::to_string(get_tape_length()-max);
 
 	return result;
 }

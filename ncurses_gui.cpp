@@ -112,7 +112,7 @@ public:
 	void update_tape() {
 		tape = tm.get_tape_raw();
 		head_pos = tm.get_head_pos();
-		tape_length = tm.get_tape_lenght();
+		tape_length = tm.get_tape_length();
 
 		if (tape_length < number_of_cells) {
 			window_start = 0;
@@ -181,7 +181,7 @@ public:
 	void update_status() {
 		move(0, 0);
 		printw("Current state: %s\n", tm.get_current_state());
-		printw("Head position: %d/%d\n", tm.get_head_pos(), tm.get_tape_lenght());
+		printw("Head position: %d/%d\n", tm.get_head_pos(), tm.get_tape_length());
 		printw("Computation steps: %d\n", tm.get_computation_steps());
 	}
 };

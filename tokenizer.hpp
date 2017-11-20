@@ -2,6 +2,7 @@
 #define TOKENIZER_H
 
 #include <string>
+#include "turing_machine.hpp"
 
 class tokenizer {
 	char *line;
