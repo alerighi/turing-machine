@@ -15,7 +15,7 @@ void parse_line(char *line, turing_machine &m, FILE *out);
 extern bool stop;
 
 
-class tape_win : public ncurses::window {
+class tape_window : public ncurses::window {
 
 	const char *tape;
 	long head_pos;
@@ -28,7 +28,7 @@ class tape_win : public ncurses::window {
 
 public:
 
-	tape_win(int height, int width, int starty, int startx, const turing_machine &tm) : 
+	tape_window(int height, int width, int starty, int startx, const turing_machine &tm) : 
 		window(height, width, starty, startx + ((width-1) % 4) + 1), number_of_cells((width-1)/4 - 1), tm(tm) {
 			update_tape();
 		}
@@ -123,7 +123,7 @@ public:
 			if (window_start < 0) 
 				window_start = 0;
 			if (window_start + number_of_cells >= tape_length)
-				window_start = tape_length - 1 - number_of_cells;
+				window_start = tape_length - number_of_cells;
 			start = 0;
 			end = number_of_cells;
 		}
@@ -132,13 +132,13 @@ public:
 
 };
 
-class code_win : public ncurses::window {
+class code_window : public ncurses::window {
 
 	const turing_machine &tm;
 	unsigned int start = 0; 
 
 public:
-	code_win(int height, int width, int starty, int startx, const turing_machine &tm) :
+	code_window(int height, int width, int starty, int startx, const turing_machine &tm) :
 		window(height, width, starty, startx, true), tm(tm) {}
 
 	void update_code() {
@@ -190,9 +190,9 @@ class gui {
 	turing_machine m;
 
 	ncurses::window root_win;
-	tape_win tape_win;
+	tape_window tape_win;
 	ncurses::window cmd_win;
-	code_win code_win;
+	code_window code_win;
 	ncurses::window status_win;
 	machine_status_win machine_win;
 

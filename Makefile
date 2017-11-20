@@ -9,7 +9,7 @@ HEADERS=tokenizer.hpp turing_machine.hpp ncurses_gui.hpp ncurses_wrapper.hpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 $(EXE): $(OBJECTS)
-	$(CXX) $(LDFLAGS) $^ -o $@
+	$(CXX) $^ -o $@ $(LDFLAGS)
 
 clean:
 	rm -f $(OBJECTS) $(EXE)

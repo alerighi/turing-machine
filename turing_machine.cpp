@@ -3,7 +3,8 @@
 #include <cstdlib>
 #include <stdexcept>
 #include <algorithm>
- 
+#include <cassert> 
+
 const int turing_machine::HALT_STATE = 0;
 const int turing_machine::INIT_STATE = 1; 
 const char * turing_machine::halt_state_name = "!";
@@ -23,7 +24,8 @@ turing_machine::~turing_machine() {
 int turing_machine::get_state_code(const std::string &name) {
 	if (state_code.count(name))
 		return state_code[name];
-	int code = state_code[name] = state_code.size();
+	int code = state_code.size();
+	state_code[name] = code;
 	state_name.push_back(name);
 	return code;
 }
@@ -274,8 +276,8 @@ const std::string turing_machine::get_program() const {
 	return result;
 }
 
-const std::vector<const std::string> turing_machine::get_program_lines() const {
-	std::vector<const std::string> result;
+const std::vector<std::string> turing_machine::get_program_lines() const {
+	std::vector<std::string> result;
 
 	for (size_t i = 0; i < program.size(); i++) {
 		result.push_back(format_instruction(program[i], i+1));

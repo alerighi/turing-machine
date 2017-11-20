@@ -77,7 +77,7 @@ public:
 	long get_head_pos() const;
 	const char * get_current_state() const; 
 	int get_computation_steps() const;
-	const std::vector<const std::string> get_program_lines() const;
+	const std::vector<std::string> get_program_lines() const;
 	const std::string get_tape(int n = -1) const;
 	const std::string get_state(int n = -1) const;
 	const std::string get_program() const;
