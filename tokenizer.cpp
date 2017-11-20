@@ -1,47 +1,28 @@
 #include "tokenizer.hpp"
 
-tokenizer::tokenizer(char *line) : line(line) {
-	init();
+tokenizer::tokenizer(const std::string& line) : line(line) {
+	for (end = 0; end < line.size() && line[end] != '\n' && line[end] != '\t' && line[end] != ';'; end++);
+
+	pos = line.find_first_not_of(' ', 0); 
+
+	if (pos == std::string::npos || pos >= end)
+		throw std::runtime_error("Error creating tokenizer");
 }
 
-tokenizer::tokenizer(const std::string &s) : str(strdup(s.c_str())), line(str) {
-	init();
-}
+std::string tokenizer::next_string() {
+	if (pos == end || pos == std::string::npos)
+		throw std::runtime_error("No more tokens");
 
-tokenizer::~tokenizer() {
-	if (str != nullptr)
-		free(str);
-}
+	size_t last = line.find(' ', pos);
+	size_t start = pos;
 
-void tokenizer::init() {
-	char *s = line;
-	// Sets the end pointer. The string ends with a newline or a comment character 
-	for (; *s; s++) {
-		if (*s == '\n' || *s == '\r' || *s == ';' || *s == '#') {
-			*s = '\0';
-			break;
-		}
+	if (last == std::string::npos || last > end) {
+		pos = end; 
+		return line.substr(start, end - start);
 	}
-	end = s;
-}
 
-char * tokenizer::next() {
-	char *start; 
-	if (line >= end)
-		return nullptr;
-	while (line < end && *line == ' ') 
-		line++;
-	if (line == end)
-		return nullptr;
-	start = line;
-	while (line < end && *line != ' ')
-		line++;
-	if (line == nullptr)
-		return nullptr;
-	*line++ = '\0';
-	if (start == line)
-		return nullptr;
-	return start;
+	pos = line.find_first_not_of(' ', last); 
+	return line.substr(start, last - start);
 }
 
 bool tokenizer::check_symbol(char c) {
@@ -53,44 +34,33 @@ bool tokenizer::check_symbol(char c) {
 		|| c == '*' || c == '.';
 }
 
-char tokenizer::get_char() {
-	const char *s = next();
-	if (s == nullptr)
-		throw std::runtime_error("Parsing error");
-	return *s;
+char tokenizer::next_char() {
+	return next_string()[0];
 }
 
-char tokenizer::get_symbol() {
-	char c = get_char();
+char tokenizer::next_symbol() {
+	char c = next_char();
 	if (!check_symbol(c))
 		throw std::runtime_error(std::string("Invalid character symbol: ") + c);
 	return c;
 }
 
-char * tokenizer::to_end() const {
-	if (line < end)
-		return line;
-	else 
-		return nullptr;
+std::string tokenizer::to_end() {
+	size_t begin = pos; 
+	pos = end;
+	return line.substr(begin, end - begin);
 }
 
-std::string tokenizer::get_string() {
-	const char *s = next();
-	if (s == nullptr)
-		throw std::runtime_error("Parsing error");
-	return std::string(s);
-}
-
-direction tokenizer::get_direction() {
-	switch (get_char()) {
+direction tokenizer::next_direction() {
+	switch (next_char()) {
 		case '<': return direction::L;
 		case '>': return direction::R;
 		default: throw std::invalid_argument("Syntax error: invalid direction character");
 	}
 }
 
-unsigned long tokenizer::get_ulong() {
-	char *str = next();
+unsigned long tokenizer::next_ulong() {
+	const char *str = next_string().c_str();
 	char *endp;
 	if (str != nullptr) {
 		long result = strtol(str, &endp, 10);

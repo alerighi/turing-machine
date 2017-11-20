@@ -80,10 +80,11 @@ void load_file(const std::string& filename, turing_machine &m, std::ostream& out
 	if (!in.is_open()) 
 		throw std::runtime_error("Error opening file " + filename + " for reading");
 	std::string line;
-	int i = 0;
+	int i = 1;
 	while(std::getline(in, line)) {
 		try {
 			parse_line(line, m, out);
+			i++;
 		} catch (const std::exception &e) {
 			out << "Error at file " << filename << " line " << i << " : " <<  e.what() << std::endl;
 		}
@@ -92,12 +93,18 @@ void load_file(const std::string& filename, turing_machine &m, std::ostream& out
 
 void parse_line(const std::string& line, turing_machine &m, std::ostream& out) {
 
-	tokenizer t(line);
 	unsigned long steps, ul;
 	char r, w;
-	std::string from, to;
+	std::string from, to, command;
+	tokenizer t;
 
-	switch (hash(t.next())) {
+	try {
+		t = tokenizer(line);
+		command = t.next_string();
+	} catch (const std::exception &e) {
+		return;
+	}
+	switch (hash(command.c_str())) {
 	case hash("echo"):
 		out << t.to_end() << std::endl;
 		break;
@@ -109,16 +116,16 @@ void parse_line(const std::string& line, turing_machine &m, std::ostream& out) {
 		break;
 	case hash("read"):
 	case hash("<"):
-		load_file(t.get_string(), m, out);
+		load_file(t.next_string(), m, out);
 		break;
 	case hash("save"):
 	case hash(">"):
-		save_file(t.get_string(), m);
+		save_file(t.next_string(), m);
 		break;
 	case hash("step"):
 	case hash("s"):
 		try {
-			steps = t.get_ulong();
+			steps = t.next_ulong();
 		} catch(const std::exception &e) {
 			steps = 1;
 		}
@@ -126,22 +133,22 @@ void parse_line(const std::string& line, turing_machine &m, std::ostream& out) {
 		break;
 	case hash("memsize"):
 	case hash("memorysize"):
-		m.set_memory_size(t.get_ulong());
+		m.set_memory_size(t.next_ulong());
 		break;
 	case hash("initsymbol"):
 	case hash("initialsymbol"):
-		m.set_initial_symbol(t.get_symbol());
+		m.set_initial_symbol(t.next_symbol());
 		break;
 	case hash("head_position"):
 	case hash("move_head"):
-		m.set_head_position(t.get_ulong());
+		m.set_head_position(t.next_ulong());
 		break;
 	case hash("set_tape"): 
-		ul = t.get_ulong();
-		m.set_tape(ul, t.next());
+		ul = t.next_ulong();
+		m.set_tape(ul, t.next_string());
 		break;
 	case hash("set_state"):
-		m.set_state(t.get_string());
+		m.set_state(t.next_string());
 		break;
 	case hash("print_state"):
 	case hash("ps"):
@@ -162,15 +169,15 @@ void parse_line(const std::string& line, turing_machine &m, std::ostream& out) {
 		break;
 	case hash("add"):
 	case hash("+"):
-		from = t.get_string();
-		r = t.get_symbol();
-		to = t.get_string();
-		w = t.get_symbol();
-		m.add_instruction(from, r, to, w, t.get_direction());
+		from = t.next_string();
+		r = t.next_symbol();
+		to = t.next_string();
+		w = t.next_symbol();
+		m.add_instruction(from, r, to, w, t.next_direction());
 		break;
 	case hash("del"):
 	case hash("-"):
-		m.del_instruction(t.get_ulong());
+		m.del_instruction(t.next_ulong());
 		break;
 	case hash("clear"):
 	case hash("C"):
