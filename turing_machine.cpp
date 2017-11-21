@@ -68,7 +68,7 @@ void turing_machine::set_head_position(long pos) {
 }
 
 void turing_machine::set_tape(long pos, const std::string &str) {
-	tape.replace(pos, pos + str.size(), str);
+	tape.replace(pos, str.size(), str);
 }
 
 void turing_machine::set_tape(long pos, char c) {
