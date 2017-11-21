@@ -8,7 +8,7 @@
 #include "ncurses_wrapper.hpp"
 #include "command_line.hpp"
 
-const char * TITLE = "Turing Machine simulator";
+const std::string TITLE = "Turing Machine simulator";
 
 class tape_window : public ncurses::window {
 
@@ -203,7 +203,7 @@ public:
 		root_win.keypad(true);
 		ncurses::set_echo(false);
 		ncurses::set_cursor_visible(false);
-		root_win.set_title(TITLE);
+		root_win.set_title(TITLE.c_str());
 		cmd_win.set_title("Command output");
 		code_win.set_title("Machine program");
 		machine_win.set_title("Machine status");

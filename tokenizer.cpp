@@ -1,4 +1,5 @@
 #include "tokenizer.hpp"
+#include <iostream>
 
 tokenizer::tokenizer(const std::string& line) : line(line) {
 	for (end = 0; end < line.size() && line[end] != '\n' && line[end] != '\t' && line[end] != ';'; end++);
@@ -60,12 +61,5 @@ direction tokenizer::next_direction() {
 }
 
 unsigned long tokenizer::next_ulong() {
-	const char *str = next_string().c_str();
-	char *endp;
-	if (str != nullptr) {
-		long result = strtol(str, &endp, 10);
-		if (*endp == '\0')
-			return result;
-	}
-	throw std::runtime_error("Invalid numeric constant");
+	return std::stol(next_string(), nullptr, 10);
 }
