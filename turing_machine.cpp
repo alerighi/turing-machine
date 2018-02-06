@@ -5,19 +5,16 @@
 #include <algorithm>
 #include <cassert> 
 
-const int turing_machine::HALT_STATE = 0;
-const int turing_machine::INIT_STATE = 1; 
-const char * turing_machine::halt_state_name = "!";
-const char * turing_machine::init_state_name = "$";
-
 // constructors
 turing_machine::turing_machine(long memory_size, char initial_symbol) 
-	: tape(memory_size, initial_symbol), head_pos(initial_symbol/2), initial_symbol(initial_symbol) {
+	: tape(memory_size, initial_symbol), head_pos(initial_symbol/2), initial_symbol(initial_symbol) 
+{
 	reset();
 }
 
 // state condifications functions
-int turing_machine::get_state_code(const std::string &name) {
+int turing_machine::get_state_code(const std::string &name) 
+{
 	if (state_code.count(name))
 		return state_code[name];
 	int code = state_code.size();
@@ -26,12 +23,14 @@ int turing_machine::get_state_code(const std::string &name) {
 	return code;
 }
 
-std::string turing_machine::get_state_name(int code) const {
+std::string turing_machine::get_state_name(int code) const 
+{
 	return state_name[code];
 }
 
 // program manipulation
-void turing_machine::add_instruction(const std::string &from, char read, const std::string &to, char write, direction dir) {
+void turing_machine::add_instruction(const std::string &from, char read, const std::string &to, char write, direction dir) 
+{
 	int code_from = get_state_code(from);
 	int code_to = get_state_code(to);
 	
@@ -45,37 +44,44 @@ void turing_machine::add_instruction(const std::string &from, char read, const s
 	table[code_from][i.symbol_read] = i;
 }
 
-void turing_machine::del_instruction(int index) {
+void turing_machine::del_instruction(int index) 
+{
 	const instruction &i = program[index];
 	table[i.from_state][i.symbol_read].is_valid = false;
 	program.erase(program.begin() + index - 1);
 }
 
-void turing_machine::clear_program() {
+void turing_machine::clear_program() 
+{
 	program.clear();
 	std::fill(table.begin(), table.end(), std::array<instruction, 128>());
 }
 
 // machine settings
-void turing_machine::set_memory_size(long memory_size) {
+void turing_machine::set_memory_size(long memory_size) 
+{
 	tape.resize(memory_size);
 	head_pos = memory_size / 2;
 	reset();
 }
 
-void turing_machine::set_head_position(long pos) {
+void turing_machine::set_head_position(long pos) 
+{
 	head_pos = pos;
 }
 
-void turing_machine::set_tape(long pos, const std::string &str) {
+void turing_machine::set_tape(long pos, const std::string &str) 
+{
 	tape.replace(pos, str.size(), str);
 }
 
-void turing_machine::set_tape(long pos, char c) {
+void turing_machine::set_tape(long pos, char c) 
+{
 	tape.at(pos) = c; 
 }
 
-void turing_machine::set_state(const std::string &state) {
+void turing_machine::set_state(const std::string &state) 
+{
 	if (state_code.count(state)) 
 		current_state = state_code[state];
 	else 
@@ -83,21 +89,23 @@ void turing_machine::set_state(const std::string &state) {
 	is_halt = false;
 }
 
-void turing_machine::set_initial_symbol(char init) {
+void turing_machine::set_initial_symbol(char init) 
+{
 	initial_symbol = init;
 	reset();
 }
 
 // machine control 
-void turing_machine::reset() {
+void turing_machine::reset() 
+{
 	fill(tape.begin(), tape.end(), initial_symbol);
 	computation_steps = 0; 
 	current_state = turing_machine::INIT_STATE;
 	is_halt = false;
 }
 
-bool turing_machine::step() {
-
+bool turing_machine::step() 
+{
 	if (is_halt) 
 		throw std::runtime_error("The machine is halted");
 
@@ -151,7 +159,8 @@ bool turing_machine::step() {
 	return true;
 }
 
-void turing_machine::move_head(int diff) {
+void turing_machine::move_head(int diff) 
+{
 	if (head_pos + diff >= 0 && head_pos + diff < get_tape_length())	
 		head_pos += diff;
 	else 
@@ -159,25 +168,33 @@ void turing_machine::move_head(int diff) {
 }
 
 // state getters
-const std::string& turing_machine::get_tape_raw() const {
+const std::string& turing_machine::get_tape_raw() const 
+{
 	return tape;
 }
-long turing_machine::get_tape_length() const {
+
+long turing_machine::get_tape_length() const 
+{
 	return tape.size();
 }
-long turing_machine::get_head_pos() const {
+
+long turing_machine::get_head_pos() const 
+{
 	return head_pos;
 }
 
-const std::string& turing_machine::get_current_state() const {
+const std::string& turing_machine::get_current_state() const 
+{
 	return state_name[current_state];
 }
 
-int turing_machine::get_computation_steps() const {
+int turing_machine::get_computation_steps() const 
+{
 	return computation_steps;
 }
 
-const std::string turing_machine::get_tape(int n) const {
+const std::string turing_machine::get_tape(int n) const 
+{
 	if (n == -1) {
 		if (head_pos >= 0 && head_pos < get_tape_length()) {
 			return tape.substr(0, head_pos)
@@ -212,7 +229,8 @@ const std::string turing_machine::get_tape(int n) const {
 	return result;
 }
 
-const std::string turing_machine::get_state(int n) const {
+const std::string turing_machine::get_state(int n) const 
+{
 	std::string res = "Current state: " + get_state_name(current_state) + "\n";
 	res += "Head position: " + std::to_string(head_pos) + "\n";
 	res += "Computation steps: " + std::to_string(computation_steps) + "\n";
@@ -220,7 +238,8 @@ const std::string turing_machine::get_state(int n) const {
 	return res;
 }
 
-const std::string turing_machine::format_instruction(const instruction &i, int line) const {
+const std::string turing_machine::format_instruction(const instruction &i, int line) const 
+{
 	char num[10];
 	snprintf(num, sizeof(num), "%4d", line);
 	std::string result = std::string(num) + ": ";
@@ -244,7 +263,8 @@ const std::string turing_machine::format_instruction(const instruction &i, int l
 	return result;
 }
 
-const std::string turing_machine::get_program() const {
+const std::string turing_machine::get_program() const 
+{
 	std::string result = "";
 
 	int l = 0;
@@ -255,7 +275,8 @@ const std::string turing_machine::get_program() const {
 	return result;
 }
 
-const std::vector<std::string> turing_machine::get_program_lines() const {
+const std::vector<std::string> turing_machine::get_program_lines() const 
+{
 	std::vector<std::string> result;
 
 	for (size_t i = 0; i < program.size(); i++) {

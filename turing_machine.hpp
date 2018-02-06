@@ -10,10 +10,10 @@ enum class direction {L, R};
 
 class turing_machine {
 
-	static const int HALT_STATE;
-	static const int INIT_STATE; 
-	static const char * halt_state_name;
-	static const char * init_state_name;
+	static const int HALT_STATE = 0;
+	static const int INIT_STATE = 1; 
+	static constexpr const char * halt_state_name = "!";
+	static constexpr const char * init_state_name = "$";
 
 	struct instruction {
 		bool is_valid;
@@ -34,7 +34,7 @@ class turing_machine {
 
 	// machine instructions
 	std::vector<instruction> program;
-	std::vector<std::array<instruction, 128> > table; 
+	std::vector<std::array<instruction, 128>> table; 
 
 	// state codification variables
 	std::vector<std::string> state_name = {halt_state_name, init_state_name};

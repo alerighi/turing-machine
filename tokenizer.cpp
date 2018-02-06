@@ -1,7 +1,9 @@
 #include "tokenizer.hpp"
 #include <iostream>
 
-tokenizer::tokenizer(const std::string& line) : line(line) {
+tokenizer::tokenizer(const std::string& line) 
+	: line(line) 
+{
 	for (end = 0; end < line.size() && line[end] != '\n' && line[end] != '\t' && line[end] != ';'; end++);
 
 	pos = line.find_first_not_of(' ', 0); 
@@ -10,7 +12,8 @@ tokenizer::tokenizer(const std::string& line) : line(line) {
 		throw std::runtime_error("Error creating tokenizer");
 }
 
-std::string tokenizer::next_string() {
+std::string tokenizer::next_string() 
+{
 	if (pos == end || pos == std::string::npos)
 		throw std::runtime_error("No more tokens");
 
@@ -26,7 +29,8 @@ std::string tokenizer::next_string() {
 	return line.substr(start, last - start);
 }
 
-bool tokenizer::check_symbol(char c) {
+bool tokenizer::check_symbol(char c) 
+{
 	return (c >= 'a' && c <= 'z') 
 		|| (c >= 'A' && c <= 'Z') 
 		|| (c >= '0' && c <= '9') 
@@ -35,24 +39,28 @@ bool tokenizer::check_symbol(char c) {
 		|| c == '*' || c == '.';
 }
 
-char tokenizer::next_char() {
+char tokenizer::next_char() 
+{
 	return next_string()[0];
 }
 
-char tokenizer::next_symbol() {
+char tokenizer::next_symbol() 
+{
 	char c = next_char();
 	if (!check_symbol(c))
 		throw std::runtime_error(std::string("Invalid character symbol: ") + c);
 	return c;
 }
 
-std::string tokenizer::to_end() {
+std::string tokenizer::to_end() 
+{
 	size_t begin = pos; 
 	pos = end;
 	return line.substr(begin, end - begin);
 }
 
-direction tokenizer::next_direction() {
+direction tokenizer::next_direction() 
+{
 	switch (next_char()) {
 		case '<': return direction::L;
 		case '>': return direction::R;
@@ -60,6 +68,7 @@ direction tokenizer::next_direction() {
 	}
 }
 
-unsigned long tokenizer::next_ulong() {
+unsigned long tokenizer::next_ulong() 
+{
 	return std::stol(next_string(), nullptr, 10);
 }

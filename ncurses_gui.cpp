@@ -24,11 +24,13 @@ class tape_window : public ncurses::window {
 public:
 
 	tape_window(int height, int width, int starty, int startx, const turing_machine &tm) : 
-		window(height, width, starty, startx + ((width-1) % 4) + 1), number_of_cells((width-1)/4 - 1), tm(tm) {
-			update_tape();
-		}
+		window(height, width, starty, startx + ((width-1) % 4) + 1), number_of_cells((width-1)/4 - 1), tm(tm) 
+	{
+		update_tape();
+	}
 
-	void refresh() {
+	void refresh() 
+	{
 
 		move(0, 0);
 
@@ -92,19 +94,22 @@ public:
 
 	}
 
-	void scroll_left() {
+	void scroll_left() 
+	{
 		if (window_start > 0)
 			window_start--;
 		refresh();
 	}
 
-	void scroll_right() {
+	void scroll_right() 
+	{
 		if (window_start < tape_length - number_of_cells - 1)
 			window_start++;
 		refresh();
 	}
 
-	void update_tape() {
+	void update_tape() 
+	{
 		tape = tm.get_tape_raw().c_str();
 		head_pos = tm.get_head_pos();
 		tape_length = tm.get_tape_length();
@@ -136,7 +141,8 @@ public:
 	code_window(int height, int width, int starty, int startx, const turing_machine &tm) :
 		window(height, width, starty, startx, true), tm(tm) {}
 
-	void update_code() {
+	void update_code() 
+	{
 		move(0, 0);
 		if (tm.get_program_lines().size() == 0) {
 			erase();
@@ -150,14 +156,16 @@ public:
 		clrtobot();
 	}
 
-	void scroll_down() {
+	void scroll_down() 
+	{
 		if (start + height < tm.get_program_lines().size()) {
 			start++;
 			update_code();
 		}
 	}
 
-	void scroll_up() {
+	void scroll_up() 
+	{
 		if (start > 0) {
 			start--;
 			update_code();
@@ -173,7 +181,8 @@ public:
 	machine_status_win(int h, int w, int y, int x, const turing_machine &tm) :
 		window(h, w, y, x, true), tm(tm) {}
 
-	void update_status() {
+	void update_status() 
+	{
 		move(0, 0);
 		printw("Current state: %s\n", tm.get_current_state().c_str());
 		printw("Head position: %d/%d\n", tm.get_head_pos(), tm.get_tape_length());
@@ -183,7 +192,6 @@ public:
 
 class gui {
 	turing_machine m;
-
 	ncurses::window root_win;
 	tape_window tape_win;
 	ncurses::window cmd_win;
@@ -192,12 +200,13 @@ class gui {
 	machine_status_win machine_win;
 
 public:
-	gui() : root_win(ncurses::initscr()), 
-			tape_win(4, ncurses::get_cols(), 1, 0, m),
-			cmd_win(ncurses::get_lines() - 11, ncurses::get_cols()/2, 10, 0, true),
-			code_win(ncurses::get_lines() - 6, ncurses::get_cols()/2, 5, ncurses::get_cols()/2, m),
-			status_win(1, ncurses::get_cols(), ncurses::get_lines() - 1, 0),
-			machine_win(5,  ncurses::get_cols()/2, 5, 0, m)
+	gui() : 
+		root_win(ncurses::initscr()), 
+		tape_win(4, ncurses::get_cols(), 1, 0, m),
+		cmd_win(ncurses::get_lines() - 11, ncurses::get_cols()/2, 10, 0, true),
+		code_win(ncurses::get_lines() - 6, ncurses::get_cols()/2, 5, ncurses::get_cols()/2, m),
+		status_win(1, ncurses::get_cols(), ncurses::get_lines() - 1, 0),
+		machine_win(5,  ncurses::get_cols()/2, 5, 0, m)
 	{
 		ncurses::set_cbreak(true);
 		root_win.keypad(true);
@@ -216,7 +225,8 @@ public:
 		m.reset();
 	}
 
-	~gui() {
+	~gui() 
+	{
 		ncurses::set_cursor_visible(true);
 		ncurses::set_echo(true);
 		root_win.clear();
@@ -224,13 +234,15 @@ public:
 		ncurses::endwin();
 	}
 
-	void update() {
+	void update() 
+	{
 		tape_win.update_tape();
 		code_win.update_code();
 		machine_win.update_status();
 	}
 
-	void prompt_command() {
+	void prompt_command() 
+	{
 		char line[1024];
 		std::stringstream out;
 
@@ -254,7 +266,8 @@ public:
 		ncurses::set_cursor_visible(false);
 	}
 
-	void input_loop() {
+	void input_loop() 
+	{
 		while (true) {
 			try {
 				switch(root_win.getch()) {
@@ -304,11 +317,10 @@ public:
 			}
 		}
 	}
-
-
 };
 
-void start_gui() {
+void start_gui() 
+{
 	gui g;
 	g.input_loop();	
 }

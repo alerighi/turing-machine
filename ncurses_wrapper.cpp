@@ -1,4 +1,3 @@
-
 #include <stdexcept>
 #include <cstring>
 #include <cstdarg>
@@ -11,41 +10,49 @@
 
 namespace ncurses {
 
-	window initscr() {
+	window initscr() 
+	{
 		return window(::initscr());
 	}
 
-	void endwin() {
+	void endwin() 
+	{
 		::endwin();
 	}
 
-	void set_echo(bool val) {
+	void set_echo(bool val) 
+	{
 		if (val)
 			::echo();
 		else 
 			::noecho();
 	}
 
-	void set_cbreak(bool val) {
+	void set_cbreak(bool val) 
+	{
 		if (val)
 			::cbreak();
 		else 
 			::nocbreak();
 	}
 
-	void set_cursor_visible(bool val) {
+	void set_cursor_visible(bool val) 
+	{
 		::curs_set(val);
 	}
 
-	chtype get_keycode(charcode c) {
+	chtype get_keycode(charcode c) 
+	{
 		return ::acs_map[static_cast<unsigned int>(c)];
 	}
 
-	int get_lines() {
+	int get_lines() 
+	{
 		return ::LINES;
 	}
 
-	int get_cols() {
+	int get_cols() 
+	{
 		return ::COLS;
 	}
 
@@ -73,13 +80,15 @@ namespace ncurses {
 
 	window::window(WINDOW *win) : window(win, ::LINES, ::COLS, 0, 0, false) {}
 
-	window::~window() {
+	window::~window() 
+	{
 		delwin(win);
 		if (box)
 			delwin(outer);
 	}
 
-	void window::set_title(const char *title) {
+	void window::set_title(const char *title) 
+	{
 		int start = width/2 - strlen(title)/2 - 1;
 		if (box) {
 			::mvwprintw(outer, 0, start, " %s ", title);
@@ -90,51 +99,63 @@ namespace ncurses {
 		}
 	}
 
-	void window::clear() {
+	void window::clear() 
+	{
 		::wclear(win);
 	}
 
-	void window::addch(chtype ch) {
+	void window::addch(chtype ch) 
+	{
 		::waddch(win, ch);
 	}
 
-	void window::addch(charcode code) {
+	void window::addch(charcode code) 
+	{
 		addch(get_keycode(code));
 	}
 
-	void window::move(int y, int x) {
+	void window::move(int y, int x) 
+	{
 		::wmove(win, y, x);
 	}
 
-	chtype window::getch() {
+	chtype window::getch() 
+	{
 		return ::wgetch(win);
 	}
 
-	void window::refresh() {
+	void window::refresh() 
+	{
 		::wrefresh(win);
 	}
 
-	void window::keypad(bool mode) {
+	void window::keypad(bool mode) 
+	{
 		::keypad(win, mode);
 	}
 
-	void window::clrtoeol() {
+	void window::clrtoeol() 
+	{
 		::wclrtoeol(win);
 	}
 
-	void window::clrtobot() {
+	void window::clrtobot() 
+	{
 		::wclrtobot(win);
 	}
 
-	int window::getcurx() {
+	int window::getcurx() 
+	{
 		return ::getcurx(win);
 	}
 
-	int window::getcury() {
+	int window::getcury() 
+	{
 		return ::getcury(win);
 	}
 
-	void window::printw(const char *fmt, ...) {
+	void window::printw(const char *fmt, ...) 
+	{
 		va_list args; 
 		va_start(args, fmt);
 		::vwprintw(win, fmt, args);
@@ -151,23 +172,28 @@ namespace ncurses {
 		refresh();
 	}
 
-	void window::set_scroll(bool val) {
+	void window::set_scroll(bool val) 
+	{
 		::scrollok(win, val);
 	}
 
-	void window::erase() {
+	void window::erase() 
+	{
 		::werase(win);
 	}
 
-	int window::getstr(char *str) {
+	int window::getstr(char *str) 
+	{
 		return wgetstr(win, str);
 	}
 
-	void window::attron(int attr) {
+	void window::attron(int attr) 
+	{
 		::wattron(win, attr);
 	}
 
-	void window::attroff(int attr) {
+	void window::attroff(int attr) 
+	{
 		::wattroff(win, attr);
 	}
 }
