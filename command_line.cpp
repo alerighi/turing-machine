@@ -26,26 +26,27 @@
 bool stop = false;
 
 const static char * USAGE = 
-	"    - `load (<) [path]` : load program from file\n"
-	"    - `save (>) [path]` : save the current program to file\n"
-	"    - `run (r)` : execute the machine till it goes to a halt state\n"
-	"    - `step (s) [nsteps]` : execute `nsteps` computations steps. Default 1.\n"
-	"    - `memorysize [nbytes]` : set the size of the tape to `nbytes`\n"
-	"    - `initialsymbol [symbol]` : set the initla symbol for the tape\n"
-	"    - `set_tape [start] [string]` : put `string` on the tape starting from `start`\n"
-	"    - `set_state [state]` : set the state to `state`\n"
-	"    - `move_head [pos]` : move the head to pos\n"
-	"    - `add (+) [from] [read] [to] [write] [dir]` : add a new instruction. From `from` if you read `read` go to `to`, write `write` and move the head to `dir`. `dir` is `<` for left and `>` for right.\n"
-	"    - `del (-) [n]` : deletes the instruction number `n``\n"
-	"    - `print_program (pp)` : print the program\n"
-	"    - `print_state (ps)` : print the machine state\n" 
-	"    - `print_state_full (psf)` : print the state showing the whole tape\n"
-	"    - `clear (C)` : clears the program\n"
-	"    - `reset (R)` : reset the machine\n"
-	"    - `echo [string]` : prints `string`\n"
-	"    - `quit (q)` : quit\n"
-	"    - `help (?)` : show help message";
-	
+	"    - load (<) [path] : load program from file\n"
+	"    - save (>) [path] : save the current program to file\n"
+	"    - run (r) : execute the machine till it goes to a halt state\n"
+	"    - step (s) [nsteps] : execute `nsteps` computations steps. Default 1.\n"
+	"    - memorysize [nbytes] : set the size of the tape to `nbytes`\n"
+	"    - initialsymbol [symbol] : set the initla symbol for the tape\n"
+	"    - set_tape [start] [string] : put `string` on the tape starting from `start`\n"
+	"    - set_state [state] : set the state to `state`\n"
+	"    - move_head [pos] : move the head to pos\n"
+	"    - add (+) [from] [read] [to] [write] [dir] : add a new instruction. From `from` if you read `read` go to `to`, write `write` and move the head to `dir`. `dir` is `<` for left and `>` for right.\n"
+	"    - del (-) [n] : deletes the instruction number `n``\n"
+	"    - print_program (pp) : print the program\n"
+	"    - print_state (ps) : print the machine state\n" 
+	"    - print_state_full (psf) : print the state showing the whole tape\n"
+	"    - clear (C) : clears the program\n"
+	"    - reset (R) : reset the machine\n"
+	"    - echo [string] : prints `string`\n"
+	"    - quit (q) : quit\n"
+	"    - help (?) : show help message\n"
+	"    - gui : start gui mode";
+
 constexpr static unsigned int hash(const char *s, int i = 0) 
 {
 	if (s == nullptr)
@@ -53,7 +54,8 @@ constexpr static unsigned int hash(const char *s, int i = 0)
 	return !s[i] ? 5381 : (hash(s, i+1) * 33) ^ s[i];
 }
 
-static void sigint_handler(int /* unused */) {
+static void sigint_handler(int /* unused */) 
+{
 	signal(SIGINT, sigint_handler);
 	stop = true;
 }
@@ -97,7 +99,6 @@ void load_file(const std::string& filename, turing_machine &m, std::ostream& out
 
 void parse_line(const std::string& line, turing_machine &m, std::ostream& out) 
 {
-
 	unsigned long steps, ul;
 	char r, w;
 	std::string from, to, command;
@@ -114,6 +115,7 @@ void parse_line(const std::string& line, turing_machine &m, std::ostream& out)
 		out << t.to_end() << std::endl;
 		break;
 	case hash("quit"): 
+	case hash("exit"):
 	case hash("q"):
 		exit(EXIT_SUCCESS);
 	case hash("help"):
@@ -221,7 +223,10 @@ void parse_cmdline(int argc, char *argv[])
 	while ((opt = getopt_long(argc, argv, "hvg", long_options, NULL)) != -1) {
 		switch (opt) {
 		case 'h':
-			std::cout << USAGE << std::endl;
+			std::cout << "Usage: " << argv[0] << " [-vhg]" << std::endl;
+			std::cout << "\t-h, --help\tShow this help message" << std::endl;
+			std::cout << "\t-v, --version\tShow program version" << std::endl;
+			std::cout << "\t-g, --gui\tStart in ncurses gui mode" << std::endl;	
 			exit(EXIT_SUCCESS);
 		case 'v':
 			std::cout << "TM VERSION V 1.0" << std::endl;
@@ -229,9 +234,6 @@ void parse_cmdline(int argc, char *argv[])
 		case 'g':
 #ifdef HAS_GUI
 			start_gui();
-#else
-			std::cerr << "Gui option not compiled!" << std::endl;
-			exit(EXIT_FAILURE);
 #endif
 		default:
 			std::cerr << "Unrecognized option: " << opt << std::endl;
