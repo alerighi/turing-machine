@@ -16,6 +16,7 @@
 
 #ifdef UNIX 
 #include <unistd.h>
+#include <getopt.h>
 #endif 
 
 #ifdef HAS_GUI
@@ -23,11 +24,6 @@
 #endif
 
 bool stop = false;
-
-static void sigint_handler(int /* unused */) {
-	signal(SIGINT, sigint_handler);
-	stop = true;
-}
 
 const static char * USAGE = 
 	"    - `load (<) [path]` : load program from file\n"
@@ -50,13 +46,20 @@ const static char * USAGE =
 	"    - `quit (q)` : quit\n"
 	"    - `help (?)` : show help message";
 	
-constexpr static unsigned int hash(const char *s, int i = 0) {
+constexpr static unsigned int hash(const char *s, int i = 0) 
+{
 	if (s == nullptr)
 		return 0;
 	return !s[i] ? 5381 : (hash(s, i+1) * 33) ^ s[i];
 }
 
-void save_file(const std::string& filename, const turing_machine& tm) {
+static void sigint_handler(int /* unused */) {
+	signal(SIGINT, sigint_handler);
+	stop = true;
+}
+
+void save_file(const std::string& filename, const turing_machine& tm) 
+{
 	std::ofstream out(filename);
 	if (!out.is_open())
 		throw std::runtime_error("Cannot open file " + filename + " for writing");
@@ -75,7 +78,8 @@ void save_file(const std::string& filename, const turing_machine& tm) {
 	out << "; end of file\n";
 }
 
-void load_file(const std::string& filename, turing_machine &m, std::ostream& out) {
+void load_file(const std::string& filename, turing_machine &m, std::ostream& out) 
+{
 	std::ifstream in(filename);
 	if (!in.is_open()) 
 		throw std::runtime_error("Error opening file " + filename + " for reading");
@@ -91,7 +95,8 @@ void load_file(const std::string& filename, turing_machine &m, std::ostream& out
 	}
 }
 
-void parse_line(const std::string& line, turing_machine &m, std::ostream& out) {
+void parse_line(const std::string& line, turing_machine &m, std::ostream& out) 
+{
 
 	unsigned long steps, ul;
 	char r, w;
@@ -203,6 +208,40 @@ void parse_line(const std::string& line, turing_machine &m, std::ostream& out) {
 	}	
 }
 
+#ifdef UNIX
+
+void parse_cmdline(int argc, char *argv[])
+{
+	struct option long_options[] = {
+		{"help", 0, NULL, 'h'},
+		{"version", 0, NULL, 'v'},
+		{"gui", 0, NULL, 'g'}
+	};
+	int opt; 
+	while ((opt = getopt_long(argc, argv, "hvg", long_options, NULL)) != -1) {
+		switch (opt) {
+		case 'h':
+			std::cout << USAGE << std::endl;
+			exit(EXIT_SUCCESS);
+		case 'v':
+			std::cout << "TM VERSION V 1.0" << std::endl;
+			exit(EXIT_SUCCESS);
+		case 'g':
+#ifdef HAS_GUI
+			start_gui();
+#else
+			std::cerr << "Gui option not compiled!" << std::endl;
+			exit(EXIT_FAILURE);
+#endif
+		default:
+			std::cerr << "Unrecognized option: " << opt << std::endl;
+			exit(EXIT_FAILURE);
+		}		
+	}
+}
+
+#endif
+
 int main(int argc, char *argv[]) 
 {
 	signal(SIGINT, sigint_handler);
@@ -212,14 +251,9 @@ int main(int argc, char *argv[])
 	bool piped = false;
 	turing_machine m;
 
-#ifdef HAS_GUI
-	if (argc >= 2 && !strcmp(argv[1], "-gui")) {
-		start_gui();
-		return 0;
-	}
-#endif
-
 #ifdef UNIX
+	parse_cmdline(argc, argv);
+
 	piped = !isatty(fileno(stdin));
 #endif
 

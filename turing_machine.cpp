@@ -80,8 +80,8 @@ void turing_machine::set_state(const std::string &state) {
 		current_state = state_code[state];
 	else 
 		throw std::runtime_error("Non existent state!");
+	is_halt = false;
 }
-
 
 void turing_machine::set_initial_symbol(char init) {
 	initial_symbol = init;
