@@ -87,7 +87,7 @@ void load_file(const std::string& filename, turing_machine &m, std::ostream& out
 		throw std::runtime_error("Error opening file " + filename + " for reading");
 	std::string line;
 	int i = 1;
-	while(std::getline(in, line)) {
+	while (std::getline(in, line)) {
 		try {
 			parse_line(line, m, out);
 			i++;

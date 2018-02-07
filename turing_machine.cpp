@@ -42,7 +42,7 @@ void turing_machine::add_instruction(const std::string &from, char read, const s
 	instruction i = { true, code_from, read, code_to, write, dir };
 	program.push_back(i);
 
-	if (state_name.size() > program.size()) {
+	if (state_name.size() > table.size()) {
 		table.resize(state_name.size());
 	}
 
