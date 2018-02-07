@@ -266,7 +266,7 @@ public:
 		ncurses::set_cursor_visible(false);
 	}
 
-	void input_loop() 
+	[[noreturn]] void input_loop() 
 	{
 		while (true) {
 			try {
@@ -319,7 +319,7 @@ public:
 	}
 };
 
-void start_gui() 
+[[noreturn]] void start_gui() 
 {
 	gui g;
 	g.input_loop();	
