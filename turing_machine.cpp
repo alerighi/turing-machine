@@ -5,6 +5,11 @@
 #include <algorithm>
 #include <cassert> 
 
+const int turing_machine::HALT_STATE = 0;
+const int turing_machine::INIT_STATE = 1; 
+const char * turing_machine::halt_state_name = "!";
+const char * turing_machine::init_state_name = "$";
+
 // constructors
 turing_machine::turing_machine(long memory_size, char initial_symbol) 
 	: tape(memory_size, initial_symbol), head_pos(initial_symbol/2), initial_symbol(initial_symbol) 
